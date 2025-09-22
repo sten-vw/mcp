@@ -13,18 +13,15 @@
 # limitations under the License.
 
 import boto3
-import importlib.metadata
 import os
 import tempfile
+from awslabs.aws_api_mcp_server import __version__
 from pathlib import Path
 from typing import Literal, cast
 
 
 # Get package version for user agent
-try:
-    PACKAGE_VERSION = importlib.metadata.version('awslabs.aws_api_mcp_server')
-except importlib.metadata.PackageNotFoundError:
-    PACKAGE_VERSION = 'unknown'
+PACKAGE_VERSION = __version__
 
 TRUTHY_VALUES = frozenset(['true', 'yes', '1'])
 READ_ONLY_KEY = 'READ_OPERATIONS_ONLY'
