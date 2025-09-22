@@ -13,9 +13,9 @@
 # limitations under the License.
 
 import boto3
+import importlib.metadata
 import os
 import tempfile
-import importlib.metadata
 from pathlib import Path
 from typing import Literal, cast
 
@@ -72,6 +72,7 @@ def get_transport_from_env() -> Literal['stdio', 'streamable-http']:
 
 
 def get_user_agent_extra() -> str:
+    """Get the user agent extra string."""
     user_agent_extra = f'awslabs/mcp/AWS-API-MCP-server/{PACKAGE_VERSION}'
     if not OPT_IN_TELEMETRY:
         return user_agent_extra

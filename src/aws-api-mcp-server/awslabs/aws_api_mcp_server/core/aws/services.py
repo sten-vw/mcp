@@ -14,8 +14,8 @@
 
 import awscli.clidriver
 import re
-from awscli.paramfile import LOCAL_PREFIX_MAP, URIArgumentHandler
 from ..common.config import get_user_agent_extra
+from awscli.paramfile import LOCAL_PREFIX_MAP, URIArgumentHandler
 from botocore.model import OperationModel
 from collections.abc import Set
 from loguru import logger
@@ -52,7 +52,7 @@ driver = awscli.clidriver.create_clidriver()
 session = driver.session
 session.register('load-cli-arg', RESTRICTED_URI_HANDLER)
 
-# append user agent to session for aws cli customizations 
+# append user agent to session for aws cli customizations
 session.user_agent_extra += ' ' + get_user_agent_extra() + ' cli-customizations'
 
 
