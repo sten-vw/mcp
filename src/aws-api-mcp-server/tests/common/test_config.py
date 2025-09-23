@@ -1,9 +1,13 @@
+import awslabs.aws_api_mcp_server.core.common.config as config_module
+import importlib
 import pytest
 from awslabs.aws_api_mcp_server.core.common.config import (
     get_region,
     get_server_directory,
     get_transport_from_env,
+    get_user_agent_extra,
 )
+from importlib.metadata import PackageNotFoundError
 from unittest.mock import MagicMock, patch
 
 
@@ -138,8 +142,6 @@ def test_get_transport_from_env_invalid_values(monkeypatch, invalid_transport):
 @patch('awslabs.aws_api_mcp_server.core.common.config.OPT_IN_TELEMETRY', False)
 def test_user_agent_without_telemetry():
     """Test user agent when telemetry is disabled."""
-    from awslabs.aws_api_mcp_server.core.common.config import get_user_agent_extra
-
     user_agent = get_user_agent_extra()
     assert 'cfg/ro#' not in user_agent
     assert 'cfg/consent#' not in user_agent
@@ -149,10 +151,6 @@ def test_user_agent_without_telemetry():
 @patch('importlib.metadata.version')
 def test_package_version_fallback_to_unknown(mock_version):
     """Test that PACKAGE_VERSION falls back to 'unknown' when package not found."""
-    import awslabs.aws_api_mcp_server.core.common.config as config_module
-    import importlib
-    from importlib.metadata import PackageNotFoundError
-
     original_version = config_module.PACKAGE_VERSION
 
     mock_version.side_effect = PackageNotFoundError()

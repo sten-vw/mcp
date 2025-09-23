@@ -1,6 +1,7 @@
 import pytest
 from awslabs.aws_api_mcp_server.core.aws.services import (
     extract_pagination_config,
+    session,
 )
 from unittest.mock import patch
 
@@ -33,8 +34,6 @@ def test_max_results(max_result_config, max_result_param, expected_max_result):
 @patch('botocore.httpsession.URLLib3Session.send')
 def test_session_user_agent_in_boto_request(mock_send, mock_env):
     """Test that boto requests include the MCP user agent."""
-    from awslabs.aws_api_mcp_server.core.aws.services import session
-
     mock_env.side_effect = lambda key, default=None: {
         'AWS_ACCESS_KEY_ID': 'test',  # pragma: allowlist secret
         'AWS_SECRET_ACCESS_KEY': 'test',  # pragma: allowlist secret
