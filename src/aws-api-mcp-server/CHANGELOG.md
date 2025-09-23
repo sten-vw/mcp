@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add telemetry for cli-cutomizations (#1335)
+- Add telemetry for AWS CLI customizations (#1335)
 
 ## [0.3.0] - 2025-09-22
 
