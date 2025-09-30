@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Mark more operations as mutating (#1364)
+- Mark more operations as mutating (#1387)
 
 ## [0.3.3] - 2025-09-30
 
