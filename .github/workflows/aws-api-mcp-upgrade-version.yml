@@ -32,8 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
-      contents: write  # SECURITY: Only for branch creation and commits
-      pull-requests: write  # SECURITY: Only for PR creation
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -49,22 +49,37 @@ jobs:
           TIMESTAMP="$(date +'%Y%m%d%H%M%S')"
           UPGRADE_BRANCH="upgrade/aws-api-mcp-awscli-$TIMESTAMP"
 
+          echo "::debug::Creating upgrade branch: $UPGRADE_BRANCH"
+
+          # Check if branch already exists
+          if git ls-remote --heads origin "$UPGRADE_BRANCH" | grep -q "$UPGRADE_BRANCH"; then
+            echo "::error::Upgrade branch already exists: $UPGRADE_BRANCH" >&2
+            exit 1
+          fi
+
+          # Configure git user
           git config --local user.email "${{ env.BOT_USER_EMAIL }}"
           git config --local user.name "${{ env.BOT_USER_NAME }}"
 
+          # Create and push branch
           git checkout -b "$UPGRADE_BRANCH"
           git push --set-upstream origin "$UPGRADE_BRANCH"
 
+          # Verify branch was created
+          if ! git ls-remote --heads origin "$UPGRADE_BRANCH" | grep -q "$UPGRADE_BRANCH"; then
+            echo "::error::Failed to verify branch creation: $UPGRADE_BRANCH" >&2
+            exit 1
+          fi
+
           echo "upgrade-branch=$UPGRADE_BRANCH" >> $GITHUB_OUTPUT
+          echo "::debug::Successfully created upgrade branch: $UPGRADE_BRANCH"
       - name: Upgrade AWS CLI in aws-api-mcp-server
         working-directory: src/aws-api-mcp-server
         run: |
           set -euo pipefail
-
-          echo "::debug::Upgrading AWS CLI dependencies"
-          uv remove awscli
-          uv add awscli --upgrade
-          uv sync
+          echo "::debug::Upgrading AWS CLI to latest version"
+          uv add --upgrade awscli
+          echo "::debug::AWS CLI upgrade completed"
       - name: Configure Git and GPG securely
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -138,6 +153,15 @@ jobs:
           UPGRADE_BRANCH="${{ steps.create-branch.outputs.upgrade-branch }}"
           BASE_BRANCH="${{ github.ref_name }}"
 
+          echo "::debug::Creating PR from $UPGRADE_BRANCH to $BASE_BRANCH"
+
+          # Validate branch names
+          if [[ ! "$UPGRADE_BRANCH" =~ ^upgrade/aws-api-mcp-awscli-[0-9]{14}$ ]]; then
+            echo "::error::Invalid upgrade branch format: $UPGRADE_BRANCH" >&2
+            exit 1
+          fi
+
+          # Create PR with validated content
           PR_URL="$(gh pr create \
             --base "$BASE_BRANCH" \
             --head "$UPGRADE_BRANCH" \
@@ -147,7 +171,7 @@ jobs:
           This PR upgrades the AWS CLI version in the aws-api-mcp-server package.
 
           ## Changes
-          * Updated AWS CLI dependencies using \`uv sync --upgrade-package awscli\`
+          * Updated AWS CLI dependencies to latest version
 
           ## Checklist
           - [ ] Dependencies have been upgraded
