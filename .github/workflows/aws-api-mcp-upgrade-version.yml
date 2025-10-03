@@ -51,12 +51,6 @@ jobs:
 
           echo "::debug::Creating upgrade branch: $UPGRADE_BRANCH"
 
-          # Check if branch already exists
-          if git ls-remote --heads origin "$UPGRADE_BRANCH" | grep -q "$UPGRADE_BRANCH"; then
-            echo "::error::Upgrade branch already exists: $UPGRADE_BRANCH" >&2
-            exit 1
-          fi
-
           # Configure git user
           git config --local user.email "${{ env.BOT_USER_EMAIL }}"
           git config --local user.name "${{ env.BOT_USER_NAME }}"
@@ -77,8 +71,25 @@ jobs:
         working-directory: src/aws-api-mcp-server
         run: |
           set -euo pipefail
-          echo "::debug::Upgrading AWS CLI to latest version"
-          uv add --upgrade awscli
+
+          echo "::debug::Upgrading AWS CLI dependencies"
+
+          # Get latest version from PyPI
+          LATEST_VERSION=$(uv run --no-project python -c "import urllib.request, json; print(json.loads(urllib.request.urlopen('https://pypi.org/pypi/awscli/json').read())['info']['version'])")
+          echo "::debug::Latest AWS CLI version from PyPI: $LATEST_VERSION"
+
+          # Remove existing awscli dependency
+          echo "::debug::Removing existing awscli dependency"
+          uv remove awscli
+
+          # Add new version with exact pinning
+          echo "::debug::Adding awscli==$LATEST_VERSION"
+          uv add "awscli==$LATEST_VERSION"
+
+          # Sync dependencies
+          echo "::debug::Syncing dependencies"
+          uv sync
+
           echo "::debug::AWS CLI upgrade completed"
       - name: Configure Git and GPG securely
         env:
