@@ -41,32 +41,6 @@ jobs:
           token: ${{ secrets.BOT_GITHUB_TOKEN }}
       - name: Install uv
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
-      - name: Create upgrade branch
-        id: create-branch
-        run: |
-          set -euo pipefail
-
-          TIMESTAMP="$(date +'%Y%m%d%H%M%S')"
-          UPGRADE_BRANCH="upgrade/aws-api-mcp-awscli-$TIMESTAMP"
-
-          echo "::debug::Creating upgrade branch: $UPGRADE_BRANCH"
-
-          # Configure git user
-          git config --local user.email "${{ env.BOT_USER_EMAIL }}"
-          git config --local user.name "${{ env.BOT_USER_NAME }}"
-
-          # Create and push branch
-          git checkout -b "$UPGRADE_BRANCH"
-          git push --set-upstream origin "$UPGRADE_BRANCH"
-
-          # Verify branch was created
-          if ! git ls-remote --heads origin "$UPGRADE_BRANCH" | grep -q "$UPGRADE_BRANCH"; then
-            echo "::error::Failed to verify branch creation: $UPGRADE_BRANCH" >&2
-            exit 1
-          fi
-
-          echo "upgrade-branch=$UPGRADE_BRANCH" >> $GITHUB_OUTPUT
-          echo "::debug::Successfully created upgrade branch: $UPGRADE_BRANCH"
       - name: Check and upgrade AWS CLI version
         id: upgrade
         working-directory: src/aws-api-mcp-server
@@ -107,6 +81,33 @@ jobs:
 
             echo "::debug::AWS CLI upgrade completed"
           fi
+      - name: Create upgrade branch
+        if: steps.upgrade.outputs.has-changes == 'true'
+        id: create-branch
+        run: |
+          set -euo pipefail
+
+          TIMESTAMP="$(date +'%Y%m%d%H%M%S')"
+          UPGRADE_BRANCH="upgrade/aws-api-mcp-awscli-$TIMESTAMP"
+
+          echo "::debug::Creating upgrade branch: $UPGRADE_BRANCH"
+
+          # Configure git user
+          git config --local user.email "${{ env.BOT_USER_EMAIL }}"
+          git config --local user.name "${{ env.BOT_USER_NAME }}"
+
+          # Create and push branch
+          git checkout -b "$UPGRADE_BRANCH"
+          git push --set-upstream origin "$UPGRADE_BRANCH"
+
+          # Verify branch was created
+          if ! git ls-remote --heads origin "$UPGRADE_BRANCH" | grep -q "$UPGRADE_BRANCH"; then
+            echo "::error::Failed to verify branch creation: $UPGRADE_BRANCH" >&2
+            exit 1
+          fi
+
+          echo "upgrade-branch=$UPGRADE_BRANCH" >> $GITHUB_OUTPUT
+          echo "::debug::Successfully created upgrade branch: $UPGRADE_BRANCH"
       - name: Configure Git and GPG securely
         if: steps.upgrade.outputs.has-changes == 'true'
         env:
