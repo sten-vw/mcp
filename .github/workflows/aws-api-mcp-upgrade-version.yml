@@ -87,8 +87,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          TIMESTAMP="$(date +'%Y%m%d%H%M%S')"
-          UPGRADE_BRANCH="upgrade/aws-api-mcp-awscli-$TIMESTAMP"
+          LATEST_VERSION="${{ steps.upgrade.outputs.latest-version }}"
+          UPGRADE_BRANCH="upgrade/aws-api-mcp-awscli-v$LATEST_VERSION"
 
           echo "::debug::Creating upgrade branch: $UPGRADE_BRANCH"
 
@@ -181,7 +181,7 @@ jobs:
           echo "::debug::Creating PR from $UPGRADE_BRANCH to $BASE_BRANCH"
 
           # Validate branch names
-          if [[ ! "$UPGRADE_BRANCH" =~ ^upgrade/aws-api-mcp-awscli-[0-9]{14}$ ]]; then
+          if [[ ! "$UPGRADE_BRANCH" =~ ^upgrade/aws-api-mcp-awscli-v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Invalid upgrade branch format: $UPGRADE_BRANCH" >&2
             exit 1
           fi
